@@ -4,19 +4,20 @@
  *  0: Set value "value" to variable "key"
  *  1: Retrieve value from variable "key"
  */
-import { join } from 'path';
-import { readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { ArtifactClient } from '@actions/artifact';
 import * as core from '@actions/core';
-import { VariableDetail, VariableStatus } from './types/variableStatus';
-import { WORKDIR } from './config';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import rimraf from 'rimraf';
-import { ArtifactClient, UploadOptions } from '@actions/artifact';
-import { UploadResponse } from '@actions/artifact/lib/internal/upload-response';
+import { WORKDIR } from './config';
+import { VariableDetail, VariableStatus } from './types/variableStatus';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const artifact = require('@actions/artifact');
+const { DefaultArtifactClient } = require('@actions/artifact');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const io = require('@actions/io');
+
+type UploadArtifactResponse = Awaited<ReturnType<ArtifactClient['uploadArtifact']>>;
 
 const defineVariableOperation = (variable: string): VariableStatus => {
   try {
@@ -44,10 +45,9 @@ const defineVariableOperation = (variable: string): VariableStatus => {
 };
 
 const storeArtifact = async (variables: VariableDetail[], failIfNotFound: boolean): Promise<void> => {
-  const client: ArtifactClient = artifact.create();
-  const artifactOptions: UploadOptions = {
-  };
-  const artifactsUploadPromises: Promise<UploadResponse>[] = [];
+  const client: ArtifactClient = new DefaultArtifactClient();
+  const artifactOptions = {};
+  const artifactsUploadPromises: Promise<UploadArtifactResponse>[] = [];
 
   rimraf.sync(WORKDIR);
   mkdirSync(WORKDIR);
@@ -75,7 +75,7 @@ const storeArtifact = async (variables: VariableDetail[], failIfNotFound: boolea
 };
 
 const retrieveArtifact = async (variables: VariableDetail[], failIfNotFound: boolean): Promise<void> => {
-  const client: ArtifactClient = artifact.create();
+  const client: ArtifactClient = new DefaultArtifactClient();
 
   rimraf.sync(WORKDIR);
   mkdirSync(WORKDIR);
