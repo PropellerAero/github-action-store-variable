@@ -74,6 +74,19 @@ const storeArtifact = async (variables: VariableDetail[], failIfNotFound: boolea
   }
 };
 
+async function downloadArtifactByName(client: ArtifactClient, artifactName: string) {
+  const { artifacts } = await client.listArtifacts();
+
+  const matchedArtifact = artifacts.find((artifact) => artifact.name === artifactName);
+
+  if (!matchedArtifact) {
+    throw new Error(`Artifact "${artifactName}" not found`);
+  }
+
+  await client.downloadArtifact(matchedArtifact.id);
+  console.log(`Downloaded artifact: ${artifactName} (ID: ${matchedArtifact.id})`);
+}
+
 const retrieveArtifact = async (variables: VariableDetail[], failIfNotFound: boolean): Promise<void> => {
   const client: ArtifactClient = new DefaultArtifactClient();
 
@@ -82,7 +95,7 @@ const retrieveArtifact = async (variables: VariableDetail[], failIfNotFound: boo
   for (const variable of variables) {
     try {
       const file = join(WORKDIR, `${variable.key}.txt`);
-      await client.downloadArtifact(variable.key);
+      await downloadArtifactByName(client, variable.key);
       variable.value = readFileSync(file, { encoding: 'utf8' }).toString();
       core.exportVariable(variable.key, variable.value);
       core.debug(`Exported ${variable.key}=${variable.value} as ENV var`);
