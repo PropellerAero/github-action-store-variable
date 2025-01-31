@@ -80,6 +80,8 @@ async function downloadArtifactByName(client: ArtifactClient, artifactName: stri
   const matchedArtifact = artifacts.find((artifact) => artifact.name === artifactName);
 
   if (!matchedArtifact) {
+    core.warning(`Artifact "${artifactName}" not found. Artifacts: ${JSON.stringify(artifacts)}`);
+
     throw new Error(`Artifact "${artifactName}" not found`);
   }
 
